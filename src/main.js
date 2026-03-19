@@ -214,27 +214,29 @@ function startGameLoop() {
   document.getElementById('game-score-badge').textContent = `⭐ ${state.settings.game?.score || 0}`;
   
   if (!state.settings.game || !state.settings.game.startTime) {
-    let closestId = null;
-    
-    // Auto-Target closest on start
-    const homeLocStr = localStorage.getItem('locus_home');
-    if (homeLocStr) {
-      try {
-        const homeLoc = JSON.parse(homeLocStr);
-        let minDist = Infinity;
-        for (const c of state.caches) {
-          if (!c.checkedInTime) {
-            const d = calculateDistanceMiles(homeLoc.lat, homeLoc.lng, c.lat, c.lng);
-            if (d < minDist) {
-              minDist = d;
-              closestId = c.id;
+    let targetIdToUse = state.settings.game?.activeTargetId;
+
+    if (!targetIdToUse) {
+      // Auto-Target closest on start ONLY if none selected
+      const homeLocStr = localStorage.getItem('locus_home');
+      if (homeLocStr) {
+        try {
+          const homeLoc = JSON.parse(homeLocStr);
+          let minDist = Infinity;
+          for (const c of state.caches) {
+            if (!c.checkedInTime) {
+              const d = calculateDistanceMiles(homeLoc.lat, homeLoc.lng, c.lat, c.lng);
+              if (d < minDist) {
+                minDist = d;
+                targetIdToUse = c.id;
+              }
             }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
     }
   
-    saveSettings({ game: { ...state.settings.game, isActive: true, startTime: Date.now(), score: 0, lastCheckinTime: null, activeTargetId: closestId } });
+    saveSettings({ game: { ...state.settings.game, isActive: true, startTime: Date.now(), score: 0, lastCheckinTime: null, activeTargetId: targetIdToUse } });
     // Reset any previous cache checks
     let needsRender = false;
     state.caches.forEach(c => {
@@ -244,7 +246,7 @@ function startGameLoop() {
         needsRender = true;
       }
     });
-    if (needsRender || closestId) renderAllSavedPins();
+    if (needsRender || targetIdToUse) renderAllSavedPins();
     updateDistanceBadge(); // <--- CRITICAL FIX! Call this AFTER activeTargetId is assigned!
   }
 
