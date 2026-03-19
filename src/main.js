@@ -154,13 +154,13 @@ async function startLocationWatcher() {
   const updateMarker = (lat, lng) => {
     const latlng = { lat, lng };
     if (!currentLocationMarker) {
-      const redXIcon = L.divIcon({
-        className: 'user-location-x',
-        html: `<div style="color: #ff4d4f; font-weight: 900; font-size: 24px; font-family: Inter, sans-serif; text-shadow: 0 0 4px white, 0 0 4px white;">✗</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+      const gpsDotIcon = L.divIcon({
+        className: 'user-location-dot',
+        html: `<div style="width: 20px; height: 20px; background: #3b82f6; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 0 4px rgba(59, 130, 246, 0.2);"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
-      currentLocationMarker = L.marker(latlng, { icon: redXIcon, zIndexOffset: 1000 }).addTo(map);
+      currentLocationMarker = L.marker(latlng, { icon: gpsDotIcon, zIndexOffset: 1000 }).addTo(map);
     } else {
       currentLocationMarker.setLatLng(latlng);
     }
@@ -197,6 +197,7 @@ function startGameLoop() {
   const hudPanel = document.getElementById('game-hud-panel');
   if (navContainer) navContainer.style.display = 'none';
   if (hudPanel) hudPanel.style.display = 'flex';
+  document.querySelectorAll('.pre-game-fab').forEach(el => el.style.display = 'none');
 
   // Despawn any lingering Adversary from a previous run to prevent spawn-camping
   if (adversaryMarker) {
@@ -262,6 +263,7 @@ function startGameLoop() {
       const remainingSeconds = targetSeconds - elapsedTotalSeconds;
       
       if (remainingSeconds <= 0) {
+        document.getElementById('game-timer').style.color = '#ef4444';
         document.getElementById('game-timer').textContent = "00:00:00 - TIME UP!";
         stopGameLoop();
         return;
@@ -270,12 +272,14 @@ function startGameLoop() {
       const h = Math.floor(remainingSeconds / 3600).toString().padStart(2, '0');
       const m = Math.floor((remainingSeconds % 3600) / 60).toString().padStart(2, '0');
       const s = (remainingSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('game-timer').style.color = remainingSeconds <= 60 ? '#ef4444' : '#2563eb';
       document.getElementById('game-timer').textContent = `${h}:${m}:${s}`;
     } else {
       // Countup
       const h = Math.floor(elapsedTotalSeconds / 3600).toString().padStart(2, '0');
       const m = Math.floor((elapsedTotalSeconds % 3600) / 60).toString().padStart(2, '0');
       const s = (elapsedTotalSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('game-timer').style.color = '#2563eb';
       document.getElementById('game-timer').textContent = `${h}:${m}:${s}`;
     }
 
@@ -322,6 +326,7 @@ function stopGameLoop() {
   const hudPanel = document.getElementById('game-hud-panel');
   if (navContainer) navContainer.style.display = 'flex';
   if (hudPanel) hudPanel.style.display = 'none';
+  document.querySelectorAll('.pre-game-fab').forEach(el => el.style.display = '');
 
   // Compute final elapsed time and show the score popup
   document.getElementById('icon-play').style.display = 'block';
@@ -442,7 +447,7 @@ export function updateDistanceBadge() {
     let textStr = distMiles < 0.1 ? `${Math.round(distFeet)} ft` : `${distMiles.toFixed(2)} mi`;
     
     // Add Compass Arrow pointing to target
-    badge.innerHTML = `<span style="font-size: 0.8em; opacity: 0.7;">📍</span> ${textStr} <span style="display:flex; align-items:center; justify-content:center; transform: rotate(${bearing}deg); transition: transform 0.3s ease-out; color: #ff4d4f; height: 1em; width: 1em;">⬆</span>`;
+    badge.innerHTML = `<span style="font-size: 0.8em; opacity: 0.7;">📍</span> ${textStr} <span style="display:flex; align-items:center; justify-content:center; transform: rotate(${bearing}deg); transition: transform 0.3s ease-out; color: #f97316; font-size: 1.4em; text-shadow: 0 0 12px rgba(249,115,22,0.6); margin-left: 8px; height: 1em; width: 1em;">⬆</span>`;
   } catch (e) {
     console.error("Distance math error:", e);
   }
@@ -573,14 +578,33 @@ function stepAdversary() {
   }
 }
 
-// Custom DivIcon renderer using SVG directly
-function createCustomIcon(iconId) {
-  const iconObj = CACHE_ICONS.find(c => c.id === iconId) || CACHE_ICONS[0];
+// Custom DivIcon renderer using SVG directly with dynamic Focus logic
+function createCustomIcon(iconId, isTarget = false, isFaded = false) {
+  const iconObj = CACHE_ICONS.find(c => c.id === iconId) || CACHE_ICONS[0]; // fallback
+  
+  let borderColor = '#0f172a'; // High contrast Slate-900 border
+  let bgColor = 'white';
+  let iconColor = '#10b981'; // Emerald-500
+  let extraCss = 'box-shadow: 0 4px 12px rgba(0,0,0,0.4);';
+  let size = 36;
+  let opacity = isFaded ? 0.35 : 1;
+  let animationClass = '';
+
+  if (isTarget) {
+    borderColor = '#fbbf24'; // Amber-400
+    bgColor = '#fffbeb'; // Amber-50
+    iconColor = '#fbbf24'; 
+    size = 48; // Massive for glanceability
+    opacity = 1;
+    extraCss = 'box-shadow: 0 0 25px rgba(251,191,36,0.9); z-index: 9999;';
+    animationClass = 'active-target-glow';
+  }
+
   return L.divIcon({
-    className: 'custom-l-icon',
-    html: `<div style="width: 32px; height: 32px; background: white; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: #4CAF50; border: 2px solid #4CAF50;">${iconObj.svg}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16] // Center 
+    className: `custom-l-icon ${animationClass}`,
+    html: `<div style="width: ${size}px; height: ${size}px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${iconColor}; border: 3px solid ${borderColor}; opacity: ${opacity}; transition: opacity 0.5s ease; ${extraCss}">${iconObj.svg}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2] 
   });
 }
 
@@ -608,22 +632,41 @@ function renderAllSavedPins() {
         iconAnchor: [16, 16]
       });
     } else if (state.settings.isSequential) {
-      // Generate a numbered SVG icon
+      // Generate a numbered icon
+      const gameActive = state.settings.game?.isActive || false;
+      const isTarget = gameActive && (cache.id === state.settings.game.activeTargetId);
+      const isFaded = gameActive && !isTarget;
+      
       const seqNumber = cache.sequenceNum || (index + 1);
-      const bg = (state.settings.game?.activeTargetId === cache.id) ? '#ff4d4f' : 'var(--forest-green)';
+      
+      let bg = 'var(--forest-green)';
+      let size = 36;
+      let opacity = isFaded ? 0.35 : 1;
+      let extraCss = 'box-shadow: 0 4px 12px rgba(0,0,0,0.4);';
+      let animationClass = '';
+      
+      if (isTarget) {
+        bg = '#fbbf24'; // Amber-400
+        size = 48;
+        opacity = 1;
+        extraCss = 'box-shadow: 0 0 25px rgba(251,191,36,0.9); z-index: 9999; border: 3px solid #0f172a;';
+        animationClass = 'active-target-glow';
+      } else {
+        extraCss += ' border: 2px solid white;';
+      }
+      
       markerIcon = L.divIcon({
-        className: 'custom-l-icon-sequence',
-        html: `<div style="width: 32px; height: 32px; background: ${bg}; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; font-weight: bold; font-family: Inter, sans-serif;">${seqNumber}</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16] // Center 
+        className: `custom-l-icon-sequence ${animationClass}`,
+        html: `<div style="width: ${size}px; height: ${size}px; background: ${bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${isTarget?'#0f172a':'white'}; font-weight: 900; font-family: Inter, sans-serif; font-size: ${isTarget?24:16}px; opacity: ${opacity}; transition: opacity 0.5s ease; ${extraCss}">${seqNumber}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2] 
       });
     } else {
       // Standard custom shapes
-      markerIcon = createCustomIcon(cache.iconId);
-      // Optional: Add some highlight CSS to custom icon if target
-      if (state.settings.game?.activeTargetId === cache.id) {
-        markerIcon.options.html = markerIcon.options.html.replace('border: 2px solid #4CAF50;', 'border: 3px solid #ff4d4f; color: #ff4d4f;');
-      }
+      const gameActive = state.settings.game?.isActive || false;
+      const isTarget = gameActive && (cache.id === state.settings.game.activeTargetId);
+      const isFaded = gameActive && !isTarget;
+      markerIcon = createCustomIcon(cache.iconId, isTarget, isFaded);
     }
 
     const marker = L.marker([cache.lat, cache.lng], {
@@ -1672,6 +1715,7 @@ window.actionPlayAgain = async () => {
     
     if (navContainer) navContainer.style.display = 'none';
     if (hudPanel) hudPanel.style.display = 'flex';
+    document.querySelectorAll('.pre-game-fab').forEach(el => el.style.display = 'none');
   } else {
     document.getElementById('icon-play').style.display = 'block';
     document.getElementById('icon-stop').style.display = 'none';
@@ -1680,6 +1724,7 @@ window.actionPlayAgain = async () => {
     
     if (navContainer) navContainer.style.display = 'flex';
     if (hudPanel) hudPanel.style.display = 'none';
+    document.querySelectorAll('.pre-game-fab').forEach(el => el.style.display = '');
   } 
   
   // Reset UI manually
