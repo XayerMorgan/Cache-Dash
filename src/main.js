@@ -170,11 +170,26 @@ async function startLocationWatcher() {
     updateDistanceBadge();
   };
 
+  // Setup Compass Orientation fallback for standing still 
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientationabsolute', (e) => {
+      if (e.alpha !== null) window.locusUserCompass = 360 - e.alpha;
+    });
+    window.addEventListener('deviceorientation', (e) => {
+      if (e.webkitCompassHeading) {
+        window.locusUserCompass = e.webkitCompassHeading;
+      } else if (e.alpha !== null && !('ondeviceorientationabsolute' in window)) {
+        window.locusUserCompass = 360 - e.alpha;
+      }
+    });
+  }
+
   try {
     const { Geolocation } = await import('@capacitor/geolocation');
     // Try to watch native if capacitor works
     await Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
       if (!err && position) {
+        window.locusUserHeading = position.coords.heading || 0;
         updateMarker(position.coords.latitude, position.coords.longitude);
         localStorage.setItem('locus_home', JSON.stringify({ lat: position.coords.latitude, lng: position.coords.longitude }));
       }
@@ -449,8 +464,15 @@ export function updateDistanceBadge() {
     const distFeet = distMiles * 5280;
     let textStr = distMiles < 0.1 ? `${Math.round(distFeet)} ft` : `${distMiles.toFixed(2)} mi`;
     
-    // Add Compass Arrow pointing to target
-    badge.innerHTML = `<span style="font-size: 0.8em; opacity: 0.7;">📍</span> ${textStr} <span style="display:flex; align-items:center; justify-content:center; transform: rotate(${bearing}deg); transition: transform 0.3s ease-out; color: #f97316; font-size: 1.4em; text-shadow: 0 0 12px rgba(249,115,22,0.6); margin-left: 8px; height: 1em; width: 1em;">⬆</span>`;
+    // Add Compass Arrow pointing to target (Relative to device heading)
+    let rot = bearing;
+    if (typeof window.locusUserCompass === 'number') {
+      rot = bearing - window.locusUserCompass;
+    } else if (typeof window.locusUserHeading === 'number') {
+      rot = bearing - window.locusUserHeading;
+    }
+    
+    badge.innerHTML = `<span style="font-size: 0.8em; opacity: 0.7;">📍</span> ${textStr} <span style="display:flex; align-items:center; justify-content:center; transform: rotate(${rot}deg); transition: transform 0.3s ease-out; color: #f97316; font-size: 1.4em; text-shadow: 0 0 12px rgba(249,115,22,0.6); margin-left: 8px; height: 1em; width: 1em;">⬆</span>`;
   } catch (e) {
     console.error("Distance math error:", e);
   }
@@ -1750,7 +1772,7 @@ window.actionExitToMap = () => {
 };
 
 window.actionShareResults = async (score, timeStr) => {
-  const cleanTime = timeStr ? timeStr.replace('<br><br>', '') : '';
+  const cleanTime = timeStr ? timeStr.replace(/<br>/g, '\n').replace('\n\n⏱️ Total Time:', '\n⏱️') : '';
   const goalName = state.settings.narrativeGoal || 'Geocache';
   const shareText = `I just conquered "${goalName}" in Cache Dash!\n🏆 Score: ${score}\n${cleanTime}`;
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -1852,7 +1874,9 @@ window.actionCheckIn = async (id) => {
       const h = Math.floor(elapsedTotal / 3600);
       const m = Math.floor((elapsedTotal % 3600) / 60);
       const s = elapsedTotal % 60;
-      timeStr = `<br><br>⏱️ Total Time: ${h}h ${m}m ${s}s`;
+      const elapsedMinutes = elapsedTotal > 0 ? (elapsedTotal / 60) : 1;
+      const ptsPerMin = (newScore / elapsedMinutes).toFixed(1);
+      timeStr = `<br><br>⏱️ Total Time: ${h}h ${m}m ${s}s<br>⚡ Pace: ${ptsPerMin} pts/min`;
     }
     
     // Slight timeout so UI finishes reacting before stealing focus using the custom modal system
@@ -1873,6 +1897,30 @@ window.actionCheckIn = async (id) => {
     }, 600);
   } else {
     // Removed redundant transient check-in modal to improve user flow
+    
+    // Auto-Target the next closest cache
+    let targetIdToUse = null;
+    const homeLocStr = localStorage.getItem('locus_home');
+    if (homeLocStr) {
+      try {
+        const homeLoc = JSON.parse(homeLocStr);
+        let minDist = Infinity;
+        for (const c of state.caches) {
+          if (!c.checkedInTime) {
+            const d = calculateDistanceMiles(homeLoc.lat, homeLoc.lng, c.lat, c.lng);
+            if (d < minDist) {
+              minDist = d;
+              targetIdToUse = c.id;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    
+    if (targetIdToUse) {
+       window.actionTarget(targetIdToUse);
+       if (window.navigator && window.navigator.vibrate) window.navigator.vibrate([30, 50, 30]); 
+    }
   }
 };
 
