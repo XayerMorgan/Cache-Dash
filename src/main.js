@@ -413,10 +413,10 @@ export function updateDistanceBadge() {
     
     badge.style.display = 'flex';
     const distFeet = distMiles * 5280;
-    let textStr = distMiles < 0.1 ? `📍 ${Math.round(distFeet)} ft` : `📍 ${distMiles.toFixed(2)} mi`;
+    let textStr = distMiles < 0.1 ? `${Math.round(distFeet)} ft` : `${distMiles.toFixed(2)} mi`;
     
     // Add Compass Arrow pointing to target
-    badge.innerHTML = `${textStr} <span style="display:inline-block; transform: rotate(${bearing}deg); transition: transform 0.5s; padding-left: 12px; color: #ff4d4f;">⬆</span>`;
+    badge.innerHTML = `<span style="font-size: 0.8em; opacity: 0.7;">📍</span> ${textStr} <span style="display:flex; align-items:center; justify-content:center; transform: rotate(${bearing}deg); transition: transform 0.3s ease-out; color: #ff4d4f; height: 1em; width: 1em;">⬆</span>`;
   } catch (e) {
     console.error("Distance math error:", e);
   }
