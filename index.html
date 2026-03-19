@@ -21,27 +21,32 @@
       <div id="ui-layer">
         
         <!-- Unified Top Panel -->
-        <header class="app-header glass-panel ui-element" id="narrative-container" style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; margin: 12px auto; max-width: 600px; width: calc(100% - 24px);">
-          <!-- Top Row: Goal Title + Tools -->
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <span class="narrative-text" id="narrative-text" style="font-size: 1.35rem; font-weight: 800; color: var(--forest-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; padding-right: 8px; min-width: 0;" title="Game Goal">Loading...</span>
-            <div style="display: flex; gap: 6px; flex-shrink: 0;">
-              <!-- Edit Goal -->
-              <button class="icon-btn ui-element" id="btn-edit-narrative" aria-label="Edit Goal" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px;">✏️</button>
-              <input type="file" id="locus-file-import" style="display: none;">
-              <label class="icon-btn ui-element" for="locus-file-import" aria-label="Import Map" style="cursor: pointer; width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px;">📂</label>
-              <button class="icon-btn ui-element" id="btn-sync" aria-label="Export" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px;">💾</button>
-              <button class="icon-btn ui-element" id="btn-delete-all" aria-label="Delete" style="width: 36px; height: 36px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; color: #ef4444;">🗑️</button>
-            </div>
+        <header class="app-header glass-panel ui-element" id="narrative-container" style="display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; margin: 12px auto; max-width: 600px; width: calc(100% - 24px);">
+          <!-- Top Row: Goal Title -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 8px;">
+            <span class="narrative-text" id="narrative-text" style="font-size: 1.4rem; font-weight: 800; color: var(--forest-dark); flex: 1; min-width: 0; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;" title="Game Goal">Loading...</span>
+            <button class="icon-btn ui-element" id="btn-edit-narrative" aria-label="Edit Goal" style="width: 32px; height: 32px; background: rgba(0,0,0,0.05); border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">✏️</button>
           </div>
           
           <!-- Bottom Row: Game Timers & Status -->
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 8px;">
-            <span class="game-timer" id="game-timer" style="display: none; font-size: 1.25rem; font-weight: 800; color: #ff4d4f; font-variant-numeric: tabular-nums;">00:00:00</span>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-left: auto;">
-              <span class="game-score" id="game-score-badge" style="display: none; font-size: 1.1rem; font-weight: 800; color: #b45309; background: rgba(234, 179, 8, 0.2); padding: 4px 12px; border-radius: 12px;">⭐ 0</span>
-              <span class="game-combo" id="game-combo-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px; transition: opacity 0.5s;">🔥 1x</span>
-              <span class="adv-status" id="adv-status-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px;">🏹 ON</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 6px; min-height: 38px;">
+            
+            <!-- Game Timers & Status (Hidden initially) -->
+            <div id="game-stats-row" style="display: none; width: 100%; justify-content: space-between; align-items: center;">
+              <span class="game-timer" id="game-timer" style="font-size: 1.35rem; font-weight: 800; color: #ff4d4f; font-variant-numeric: tabular-nums;">00:00:00</span>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span class="game-score" id="game-score-badge" style="font-size: 1.2rem; font-weight: 800; color: #b45309; background: rgba(234, 179, 8, 0.2); padding: 4px 12px; border-radius: 12px;">⭐ 0</span>
+                <span class="game-combo" id="game-combo-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px; transition: opacity 0.5s;">🔥 1x</span>
+                <span class="adv-status" id="adv-status-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px;">🏹 ON</span>
+              </div>
+            </div>
+
+            <!-- Pre-game Tools (Visible initially) -->
+            <div id="pre-game-tools-row" style="display: flex; width: 100%; justify-content: flex-end; gap: 8px;">
+              <input type="file" id="locus-file-import" style="display: none;">
+              <label class="icon-btn ui-element" for="locus-file-import" aria-label="Import Map" style="cursor: pointer; width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0;">📂</label>
+              <button class="icon-btn ui-element" id="btn-sync" aria-label="Export" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px;">💾</button>
+              <button class="icon-btn ui-element" id="btn-delete-all" aria-label="Delete" style="width: 36px; height: 36px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; color: #ef4444;">🗑️</button>
             </div>
           </div>
         </header>
