@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { loadAllCaches, saveCache, deleteCache, state, loadSettings, saveSettings } from './store.js';
 import { marked } from 'marked';
 import faqRaw from '../FAQ.md?raw';
+import NoSleep from 'nosleep.js';
 
 // --- Default Leaflet Icon Workaround ---
 delete L.Icon.Default.prototype._getIconUrl;
@@ -24,10 +25,21 @@ window.isAutoCenter = true;
 let lastAlertTime = 0;
 let globalAudioCtx = null;
 
+const noSleep = new NoSleep();
+
+// Ensure nosleep triggers on first arbitrary user touch
+document.addEventListener('click', function enableNoSleepOnce() {
+  document.removeEventListener('click', enableNoSleepOnce, false);
+  if (!noSleep.isEnabled) {
+    noSleep.enable();
+  }
+}, false);
+
 async function requestWakeLock() {
   try {
     if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
   } catch (err) {}
+  if (!noSleep.isEnabled) noSleep.enable();
 }
 
 async function releaseWakeLock() {
@@ -35,6 +47,7 @@ async function releaseWakeLock() {
     await wakeLock.release();
     wakeLock = null;
   }
+  if (noSleep.isEnabled) noSleep.disable();
 }
 let adversaryMarker = null; // Marker for the Hunter / Adversary
 
