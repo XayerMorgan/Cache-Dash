@@ -602,8 +602,8 @@ function createCustomIcon(iconId, isTarget = false, isFaded = false) {
   }
 
   return L.divIcon({
-    className: `custom-l-icon ${animationClass}`,
-    html: `<div style="width: ${size}px; height: ${size}px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${iconColor}; border: 3px solid ${borderColor}; opacity: ${opacity}; transition: opacity 0.5s ease; ${extraCss}">${iconObj.svg}</div>`,
+    className: `custom-l-icon`,
+    html: `<div class="${animationClass}" style="width: ${size}px; height: ${size}px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${iconColor}; border: 3px solid ${borderColor}; opacity: ${opacity}; transition: opacity 0.5s ease; ${extraCss}">${iconObj.svg}</div>`,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2] 
   });
@@ -657,8 +657,8 @@ function renderAllSavedPins() {
       }
       
       markerIcon = L.divIcon({
-        className: `custom-l-icon-sequence ${animationClass}`,
-        html: `<div style="width: ${size}px; height: ${size}px; background: ${bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${isTarget?'#0f172a':'white'}; font-weight: 900; font-family: Inter, sans-serif; font-size: ${isTarget?24:16}px; opacity: ${opacity}; transition: opacity 0.5s ease; ${extraCss}">${seqNumber}</div>`,
+        className: `custom-l-icon-sequence`,
+        html: `<div class="${animationClass}" style="width: ${size}px; height: ${size}px; background: ${bg}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${isTarget?'#0f172a':'white'}; font-weight: 900; font-family: Inter, sans-serif; font-size: ${isTarget?24:16}px; opacity: ${opacity}; transition: opacity 0.5s ease; ${extraCss}">${seqNumber}</div>`,
         iconSize: [size, size],
         iconAnchor: [size/2, size/2] 
       });
