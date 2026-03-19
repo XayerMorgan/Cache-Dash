@@ -28,32 +28,32 @@
             <button class="icon-btn ui-element" id="btn-edit-narrative" aria-label="Edit Goal" style="width: 32px; height: 32px; background: rgba(0,0,0,0.05); border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">✏️</button>
           </div>
           
-          <!-- Bottom Row: Game Timers & Status -->
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 6px; min-height: 38px;">
-            
-            <!-- Game Timers & Status (Hidden initially) -->
-            <div id="game-stats-row" style="display: none; width: 100%; justify-content: space-between; align-items: center;">
-              <span class="game-timer" id="game-timer" style="font-size: 1.35rem; font-weight: 800; color: #ff4d4f; font-variant-numeric: tabular-nums;">00:00:00</span>
-              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <span class="game-score" id="game-score-badge" style="font-size: 1.2rem; font-weight: 800; color: #b45309; background: rgba(234, 179, 8, 0.2); padding: 4px 12px; border-radius: 12px;">⭐ 0</span>
-                <span class="game-combo" id="game-combo-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px; transition: opacity 0.5s;">🔥 1x</span>
-                <span class="adv-status" id="adv-status-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px;">🏹 ON</span>
-              </div>
-            </div>
-
-            <!-- Pre-game Tools (Visible initially) -->
-            <div id="pre-game-tools-row" style="display: flex; width: 100%; justify-content: flex-end; gap: 8px;">
-              <input type="file" id="locus-file-import" style="display: none;">
-              <label class="icon-btn ui-element" for="locus-file-import" aria-label="Import Map" style="cursor: pointer; width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0;">📂</label>
-              <button class="icon-btn ui-element" id="btn-sync" aria-label="Export" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px;">💾</button>
-              <button class="icon-btn ui-element" id="btn-delete-all" aria-label="Delete" style="width: 36px; height: 36px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; color: #ef4444;">🗑️</button>
-            </div>
+          <!-- Bottom Row: Pre-game Tools (Visible initially) -->
+          <div id="pre-game-tools-row" style="display: flex; width: 100%; justify-content: flex-end; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 6px; gap: 8px; min-height: 38px;">
+            <input type="file" id="locus-file-import" style="display: none;">
+            <label class="icon-btn ui-element" for="locus-file-import" aria-label="Import Map" style="cursor: pointer; width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0;">📂</label>
+            <button class="icon-btn ui-element" id="btn-sync" aria-label="Export" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 8px;">💾</button>
+            <button class="icon-btn ui-element" id="btn-delete-all" aria-label="Delete" style="width: 36px; height: 36px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; color: #ef4444;">🗑️</button>
           </div>
         </header>
 
-        <!-- Translucent HUD for Target Data (Centered on screen) -->
-        <div id="target-distance-badge" class="glass-panel ui-element" style="display: none; position: absolute; top: 110px; left: 50%; transform: translateX(-50%); flex-direction: row; align-items: center; justify-content: center; padding: 12px 24px; font-size: 2.5rem; border: 3px solid var(--river-blue); color: var(--river-blue); font-weight: 900; background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border-radius: 40px; z-index: 10; font-variant-numeric: tabular-nums; white-space: nowrap; gap: 12px; box-shadow: 0 10px 40px rgba(33, 150, 243, 0.3);">
-          📍 --
+        <!-- Translucent HUD for Active Gameplay -->
+        <div id="game-hud-panel" class="glass-panel ui-element" style="display: none; position: absolute; top: 110px; left: 50%; transform: translateX(-50%); flex-direction: column; align-items: stretch; padding: 12px 24px; border: 3px solid var(--river-blue); background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border-radius: 40px; z-index: 10; font-variant-numeric: tabular-nums; box-shadow: 0 10px 40px rgba(33, 150, 243, 0.3); max-width: 90%; width: max-content; gap: 4px;">
+           
+           <!-- HUD Top Row: Distance & Arrow -->
+           <div id="target-distance-badge" style="display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--river-blue); font-weight: 900; white-space: nowrap; gap: 12px; height: 40px;">
+             📍 --
+           </div>
+
+           <!-- HUD Bottom Row: Stats -->
+           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 2px solid rgba(56, 189, 248, 0.2); padding-top: 8px; margin-top: 4px; gap: 16px;">
+             <span class="game-timer" id="game-timer" style="display: none; font-size: 1.35rem; font-weight: 800; color: #ff4d4f;">00:00:00</span>
+             <div style="display: flex; gap: 8px; align-items: center;">
+               <span class="game-score" id="game-score-badge" style="display: none; font-size: 1.2rem; font-weight: 800; color: #b45309; background: rgba(234, 179, 8, 0.2); padding: 4px 12px; border-radius: 12px;">⭐ 0</span>
+               <span class="game-combo" id="game-combo-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px; transition: opacity 0.5s;">🔥 1x</span>
+               <span class="adv-status" id="adv-status-badge" style="display: none; font-size: 0.9rem; font-weight: 800; color: white; background: #ef4444; padding: 4px 8px; border-radius: 12px;">🏹 ON</span>
+             </div>
+           </div>
         </div>
 
         <!-- Floating Action Button Stack -->
