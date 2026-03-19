@@ -18,7 +18,11 @@ let map = null;
 let currentCacheMarker = null; // Marker for the new/edit cache
 let activeCacheId = null; // ID of cache currently being edited
 let currentLocationMarker = null; // Marker for live user location (Red X)
-let gameTimerInterval = null; // Interval for the active game timer
+let gameTimerInterval = null;
+
+document.getElementById('pre-game-tools-row').style.display = 'flex';
+document.getElementById('game-stats-row').style.display = 'none';
+
 let wakeLock = null;
 let autoConfirmActive = false;
 window.isAutoCenter = true;
@@ -192,6 +196,9 @@ async function startLocationWatcher() {
 function startGameLoop() {
   requestWakeLock();
   
+  document.getElementById('pre-game-tools-row').style.display = 'none';
+  document.getElementById('game-stats-row').style.display = 'flex';
+
   // Despawn any lingering Adversary from a previous run to prevent spawn-camping
   if (adversaryMarker) {
     if (map) map.removeLayer(adversaryMarker);
@@ -310,7 +317,14 @@ function stopGameLoop() {
   releaseWakeLock();
   saveSettings({ game: { ...state.settings.game, isActive: false, startTime: null } });
   if (gameTimerInterval) clearInterval(gameTimerInterval);
+  gameTimerInterval = null;
   
+  const pgTools = document.getElementById('pre-game-tools-row');
+  const gsRow = document.getElementById('game-stats-row');
+  if (pgTools) pgTools.style.display = 'flex';
+  if (gsRow) gsRow.style.display = 'none';
+
+  // Compute final elapsed time and show the score popup
   document.getElementById('icon-play').style.display = 'block';
   document.getElementById('icon-stop').style.display = 'none';
   document.getElementById('btn-play-game').style.backgroundColor = 'var(--river-blue)';
