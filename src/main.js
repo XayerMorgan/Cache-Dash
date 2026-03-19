@@ -20,9 +20,6 @@ let activeCacheId = null; // ID of cache currently being edited
 let currentLocationMarker = null; // Marker for live user location (Red X)
 let gameTimerInterval = null;
 
-document.getElementById('pre-game-tools-row').style.display = 'flex';
-document.getElementById('game-stats-row').style.display = 'none';
-
 let wakeLock = null;
 let autoConfirmActive = false;
 window.isAutoCenter = true;
