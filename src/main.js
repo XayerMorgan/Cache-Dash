@@ -193,9 +193,9 @@ async function startLocationWatcher() {
 function startGameLoop() {
   requestWakeLock();
   
-  const pgTools = document.getElementById('pre-game-tools-row');
+  const navContainer = document.getElementById('narrative-container');
   const hudPanel = document.getElementById('game-hud-panel');
-  if (pgTools) pgTools.style.display = 'none';
+  if (navContainer) navContainer.style.display = 'none';
   if (hudPanel) hudPanel.style.display = 'flex';
 
   // Despawn any lingering Adversary from a previous run to prevent spawn-camping
@@ -318,9 +318,9 @@ function stopGameLoop() {
   if (gameTimerInterval) clearInterval(gameTimerInterval);
   gameTimerInterval = null;
   
-  const pgTools = document.getElementById('pre-game-tools-row');
+  const navContainer = document.getElementById('narrative-container');
   const hudPanel = document.getElementById('game-hud-panel');
-  if (pgTools) pgTools.style.display = 'flex';
+  if (navContainer) navContainer.style.display = 'flex';
   if (hudPanel) hudPanel.style.display = 'none';
 
   // Compute final elapsed time and show the score popup
@@ -1661,7 +1661,7 @@ window.actionPlayAgain = async () => {
   
   // Update top row buttons vs game stats
   const gameIsActive = state.settings.game && state.settings.game.isActive;
-  const pgTools = document.getElementById('pre-game-tools-row');
+  const navContainer = document.getElementById('narrative-container');
   const hudPanel = document.getElementById('game-hud-panel');
   if (gameIsActive) {
     document.getElementById('icon-play').style.display = 'none';
@@ -1670,7 +1670,7 @@ window.actionPlayAgain = async () => {
     document.getElementById('game-timer').style.display = 'inline-block';
     document.getElementById('game-score-badge').style.display = 'inline-block';
     
-    if (pgTools) pgTools.style.display = 'none';
+    if (navContainer) navContainer.style.display = 'none';
     if (hudPanel) hudPanel.style.display = 'flex';
   } else {
     document.getElementById('icon-play').style.display = 'block';
@@ -1678,7 +1678,7 @@ window.actionPlayAgain = async () => {
     document.getElementById('game-timer').style.display = 'none';
     document.getElementById('game-score-badge').style.display = 'none';
     
-    if (pgTools) pgTools.style.display = 'flex';
+    if (navContainer) navContainer.style.display = 'flex';
     if (hudPanel) hudPanel.style.display = 'none';
   } 
   
