@@ -245,6 +245,7 @@ function startGameLoop() {
       }
     });
     if (needsRender || closestId) renderAllSavedPins();
+    updateDistanceBadge(); // <--- CRITICAL FIX! Call this AFTER activeTargetId is assigned!
   }
 
   if (gameTimerInterval) clearInterval(gameTimerInterval);
