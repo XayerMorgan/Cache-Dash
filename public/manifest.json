@@ -1,0 +1,17 @@
+{
+  "name": "Cache Dash",
+  "short_name": "Cache Dash",
+  "description": "Privacy-first offline geocaching, compass navigation, and outdoor racing game.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#166534",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

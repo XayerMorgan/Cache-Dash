@@ -1,57 +1,71 @@
-export async function getHomeLocation() {
-  let home = localStorage.getItem('locus_home');
-  if (home) return JSON.parse(home);
+export async function getHomeLocation(fallbackLatLng = null) {
+  const home = localStorage.getItem('locus_home');
+  if (home) {
+    try {
+      const parsed = JSON.parse(home);
+      if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+        return parsed;
+      }
+    } catch (_) {}
+  }
 
   try {
     const pos = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation unavailable'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 8000
+      });
     });
     const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     localStorage.setItem('locus_home', JSON.stringify(loc));
     return loc;
-  } catch (err) {
-    // Prompt fallback if geolocation fails or is denied
-    const input = prompt("Could not detect location. Please enter your home Lat, Lng (e.g., 34.05, -118.24):");
-    if (input) {
-      const parts = input.split(',');
-      if (parts.length >= 2) {
-        const lat = parseFloat(parts[0]);
-        const lng = parseFloat(parts[1]);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const loc = { lat, lng };
-          localStorage.setItem('locus_home', JSON.stringify(loc));
-          return loc;
-        }
-      }
+  } catch (_) {
+    if (fallbackLatLng && Number.isFinite(fallbackLatLng.lat) && Number.isFinite(fallbackLatLng.lng)) {
+      return { lat: fallbackLatLng.lat, lng: fallbackLatLng.lng };
     }
   }
   return null;
 }
 
-export function generateRandomCaches(centerLat, centerLng, cacheIcons, count = 10, radiusMiles = 1, baseName = "Random Cache", baseDesc = "Auto-generated cache near your location.", basePts = 10) {
+export function generateRandomCaches(
+  centerLat,
+  centerLng,
+  cacheIcons,
+  count = 10,
+  radiusMiles = 1,
+  baseName = 'Secret Node',
+  baseDesc = 'Auto-generated geocache in your area.',
+  basePts = 10,
+  startingSequence = 1
+) {
   const generated = [];
-  const radiusDeg = radiusMiles / 69; // Rough conversion: 1 degree latitude ~= 69 miles
+  const radiusDeg = radiusMiles / 69;
+  const cosLat = Math.max(0.1, Math.cos((centerLat * Math.PI) / 180));
+  const now = Date.now();
 
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * 2 * Math.PI;
-    // Math.sqrt(Math.random()) distributes points uniformly over the area of the circle
-    const r = radiusDeg * Math.sqrt(Math.random()); 
+    // Keep drops between 12% and 100% of radius so they don't all stack right on top of the player
+    const r = radiusDeg * (0.12 + 0.88 * Math.sqrt(Math.random()));
     const dLat = r * Math.sin(angle);
-    // Longitude degree distance shrinks with cosine of latitude
-    const dLng = (r * Math.cos(angle)) / Math.cos(centerLat * Math.PI / 180);
-    
-    // Pick random icon
+    const dLng = (r * Math.cos(angle)) / cosLat;
+
     const iconId = cacheIcons[Math.floor(Math.random() * cacheIcons.length)].id;
-    
+
     generated.push({
-      id: "RND_" + Date.now().toString() + "_" + i,
-      name: `${baseName} #${Math.floor(Math.random() * 1000)}`,
+      id: `RND_${now}_${i}`,
+      name: `${baseName} #${startingSequence + i}`,
       desc: baseDesc,
       points: basePts,
-      lat: centerLat + dLat,
-      lng: centerLng + dLng,
-      iconId: iconId,
-      timestamp: Date.now()
+      lat: Number((centerLat + dLat).toFixed(6)),
+      lng: Number((centerLng + dLng).toFixed(6)),
+      iconId,
+      sequenceNum: startingSequence + i,
+      timestamp: now + i
     });
   }
   return generated;

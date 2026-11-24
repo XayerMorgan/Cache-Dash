@@ -1,5 +1,9 @@
-import { crc32, saveCache, state } from './store.js';
+import { crc32, saveCache, deleteAllCaches } from './store.js';
 
+/**
+ * Import a Cache Dash (.gcache or .json) map file.
+ * Supports both checksum-verified exports AND open external/LLM-authored .gcache payloads.
+ */
 export async function importCaches(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -9,85 +13,70 @@ export async function importCaches(file) {
         const text = e.target.result;
         const data = JSON.parse(text);
 
-        // Security / Integrity check via CRC32
-        if (!data._checksum) {
-          throw new Error("Invalid file format: Missing checksum.");
+        if (!data || typeof data !== 'object' || !Array.isArray(data.caches)) {
+          throw new Error('Invalid .gcache file: expected a JSON object containing a "caches" array.');
         }
 
-        const providedChecksum = data._checksum;
-        
-        // Strip out checksum to recompute payload hash
-        const verifyData = { ...data };
-        delete verifyData._checksum;
-        
-        const computedChecksum = crc32(JSON.stringify(verifyData));
+        // Verify CRC32 checksum if present (signed Cache Dash export)
+        let verified = false;
+        if (data._checksum !== undefined && data._checksum !== null) {
+          const providedChecksum = data._checksum;
+          const verifyData = { ...data };
+          delete verifyData._checksum;
 
-        if (computedChecksum !== providedChecksum) {
-          throw new Error("File integrity compromised: Checksums do not match.");
+          const computedChecksum = crc32(JSON.stringify(verifyData));
+          if (computedChecksum !== providedChecksum) {
+            throw new Error('File integrity check failed: checksum mismatch. File may be corrupted or modified.');
+          }
+          verified = true;
         }
 
-        // Validate structure
-        if (data.version !== "1.0" || !Array.isArray(data.caches)) {
-          throw new Error("Unsupported Locus database version or corrupted data.");
+        if (data.version && data.version !== '1.0') {
+          throw new Error(`Unsupported Cache Dash map version "${data.version}".`);
         }
 
-        // Wipe existing DB first for hard loads
-        const { deleteAllCaches } = await import('./store.js');
+        // Validate every cache before wiping existing data (atomic safety!)
+        const sanitizedCaches = data.caches.map((raw, idx) => {
+          const lat = Number(raw.lat);
+          const lng = Number(raw.lng);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            throw new Error(`Cache #${idx + 1} ("${raw.name || 'Unnamed'}") has invalid coordinates.`);
+          }
+          return {
+            id: String(raw.id || `IMP_${Date.now()}_${idx}`),
+            name: String(raw.name || `Cache #${idx + 1}`).trim(),
+            desc: String(raw.desc || '').trim(),
+            lat,
+            lng,
+            iconId: String(raw.iconId || 'box'),
+            points: Number.isFinite(Number(raw.points)) ? Math.max(0, Math.round(Number(raw.points))) : 10,
+            sequenceNum: Number.isFinite(Number(raw.sequenceNum)) && Number(raw.sequenceNum) > 0
+              ? Math.round(Number(raw.sequenceNum))
+              : idx + 1,
+            timestamp: Number(raw.timestamp) || (Date.now() + idx)
+          };
+        });
+
         await deleteAllCaches();
 
-        let importedCount = 0;
-        
-        // Destructive Load: Insert all caches from the snapshot
-        for (let incomingCache of data.caches) {
-          // Sanitize: Strip any active gameplay progress so the map loads fresh
-          delete incomingCache.checkedInTime;
-          delete incomingCache.pointsAwarded;
-          
+        for (const incomingCache of sanitizedCaches) {
           await saveCache(incomingCache);
-          importedCount++;
         }
-        
-        resolve({ count: importedCount, settings: data.settings || {} });
-        
+
+        resolve({
+          count: sanitizedCaches.length,
+          settings: data.settings || {},
+          verified
+        });
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(String(err)));
       }
     };
 
     reader.onerror = () => {
-      reject(new Error("Failed to read the file from disk."));
+      reject(new Error('Failed to read the selected file from disk.'));
     };
 
     reader.readAsText(file);
   });
-}
-
-// Setup a hidden native file picker element on DOM
-export function openImportDialog(onSuccess) {
-  let fileInput = document.getElementById('locus-file-import');
-  if (!fileInput) {
-    fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.id = 'locus-file-import';
-    fileInput.style.display = 'none';
-    
-    fileInput.addEventListener('change', async (e) => {
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        try {
-          const count = await importCaches(file);
-          alert(`Success! Loaded ${count} geocaches into your map.`);
-          if (onSuccess) onSuccess();
-        } catch (err) {
-          alert('Import failed: ' + err.message);
-        }
-      }
-      // Reset input so selecting the same file triggers change again
-      fileInput.value = '';
-    });
-    
-    document.body.appendChild(fileInput);
-  }
-  
-  fileInput.click();
 }
